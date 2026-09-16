@@ -71,12 +71,15 @@
 │   ├── dijkstra_path.png            # แผนที่จำลอง Dijkstra
 │   ├── path_map_from_csv.png        # แผนที่จริงจาก CSV พร้อม Sensor Tags & Telemetry Table
 │   └── path_map_multi_round_comparison.png # Dashboard เปรียบเทียบผลหลายรอบ
+├── tests/                           # โฟลเดอร์ชุดทดสอบ Unit Tests
+│   ├── __init__.py
+│   └── test_bfs.py                  # ชุดทดสอบ Unit Test สำหรับ BFS และตรรกะนำทาง
 ├── main.py                          # จุดสั่งการหลัก (รองรับทั้ง BFS และ --algo astar)
 ├── main_astar.py                    # จุดสั่งการสำหรับอัลกอริทึม A* โดยเฉพาะ
 ├── main_dfs.py                      # จุดสั่งการสำหรับอัลกอริทึม DFS (Simulation / Benchmark)
 ├── main_dijkstra.py                 # จุดสั่งการสำหรับอัลกอริทึม Dijkstra (Simulation / Optimal Cost)
 ├── plot_path.py                     # สคริปต์สั่งพล็อตแผนที่และ Dashboard จาก CSV
-├── test_bfs.py                      # ชุดทดสอบ Unit Test สำหรับ BFS และตรรกะนำทาง
+├── requirements.txt                 # รายการไลบรารีที่จำเป็น (Python 3.8)
 └── README.md                        # คู่มือการทำงานและวิธีใช้งานระบบ
 ```
 
@@ -157,4 +160,49 @@ cd .\shortest_planing_RDJ\
 ```powershell
 pip install -r requirements.txt
 ```
-### 3) การรันสามารถกดรันที่ไฟล์ชื่อขึ้นต้นด้วย main ได้เลยแต่ต้องต่อหุ่นก่อน (main.py คือ bfs)
+### 3) วิธีรันโปรแกรม (Execution Guide)
+
+สามารถสั่งรันผ่านเทอร์มินัล (หรือกดรันไฟล์ที่ขึ้นต้นด้วย `main`) ได้ดังนี้:
+
+#### 🤖 ก. รันบนหุ่นยนต์จริง RoboMaster EP (ต้องเชื่อมต่อหุ่นก่อนรัน)
+```powershell
+# รัน BFS (ค่าเริ่มต้น) ผ่านสัญญาณ Direct Wi-Fi ของหุ่น (AP Mode)
+python main.py --conn ap
+
+# หรือรันผ่าน Wi-Fi Router เดียวกัน (STA Mode)
+python main.py --conn sta
+
+# รัน A* บนหุ่นยนต์จริง
+python main_astar.py --conn ap
+```
+> ข้อมูลเซนเซอร์จริง (ToF, IMU, Gimbal, พิกัด) จะถูกบันทึกสะสมลงในไฟล์ CSV ที่โฟลเดอร์ `logs/` โดยอัตโนมัติ
+
+#### 🚗 ข. รันในโหมดจำลอง (Simulation Mode - ไม่ต้องต่อหุ่นจริง)
+เติมอาร์กิวเมนต์ `--sim` ท้ายคำสั่ง:
+```powershell
+# รันจำลอง BFS
+python main.py --sim
+
+# รันจำลอง A*
+python main_astar.py --sim
+
+# รันคำนวณและวาดเส้นทาง DFS (วัดเวลาและบันทึกภาพ)
+python main_dfs.py
+
+# รันคำนวณและวาดเส้นทาง Dijkstra (Optimal Cost)
+python main_dijkstra.py
+```
+
+#### 📊 ค. พล็อตแผนที่และ Dashboard จากไฟล์ CSV
+```powershell
+# พล็อตแผนที่จริงจากข้อมูลรอบล่าสุดใน CSV
+python plot_path.py --csv logs/navigation_log.csv
+
+# สร้าง Dashboard เปรียบเทียบผลทุกรอบ (Multi-Round Comparison)
+python plot_path.py --csv logs/navigation_log.csv --compare
+```
+
+#### 🧪 ง. รันชุดทดสอบ (Unit Tests)
+```powershell
+python -m unittest discover tests
+```

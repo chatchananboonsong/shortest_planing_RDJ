@@ -1,5 +1,21 @@
 # Python virtual environment
 .venv/
 venv/
-env
-_pycache__/
+env/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Test artifacts
+test_log.csv
+
+# IDE & Editor settings
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
