@@ -1,37 +1,11 @@
-# RoboMaster EP - Grid Navigation & Telemetry System
-
-ระบบนำทางอัตโนมัติสำหรับหุ่นยนต์ **RoboMaster EP** บนสนามจำลองขนาด $4 \times 4$ ช่อง พร้อมระบบตรวจสอบเซนเซอร์ (ToF & IMU), ระบบความปลอดภัยฉุกเฉิน, ระบบบันทึกข้อมูล Telemetry ลงไฟล์ CSV และการสร้าง Dashboard แผนที่เส้นทาง
-อ้างอิงข้อกำหนดตาม [docs/RQM.md](file:///C:/Users/LENOVO_CT/Downloads/New%20folder%20%282%29/docs/RQM.md) และรูปภาพแผนที่ [docs/Picture2.png](file:///C:/Users/LENOVO_CT/Downloads/New%20folder%20%282%29/docs/Picture2.png)
-
----
-
-## 📌 สารบัญ (Table of Contents)
-1. [ข้อกำหนดของระบบ (Requirements)](#-ข้อกำหนดของระบบ-requirements)
-2. [แผนที่สนาม ค่าใช้จ่าย และเส้นทาง (Grid Map & Costs)](#-แผนที่สนาม-ค่าใช้จ่าย-และเส้นทาง-grid-map--costs)
-3. [โครงสร้างโปรเจกต์ (Project Structure)](#-โครงสร้างโปรเจกต์-project-structure)
-4. [หลักการทำงานของระบบ (System Architecture & Core Logic)](#-หลักการทำงานของระบบ-system-architecture--core-logic)
-   - [4.1 อัลกอริทึมค้นหาเส้นทาง (Path Planning Algorithms)](#41-อัลกอริทึมค้นหาเส้นทาง-path-planning-algorithms)
-   - [4.2 การควบคุมหุ่นยนต์และเซนเซอร์ (Robot & Sensor Control)](#42-การควบคุมหุ่นยนต์และเซนเซอร์-robot--sensor-control)
-   - [4.3 ระบบบันทึกข้อมูล Telemetry (CSV Logging)](#43-ระบบบันทึกข้อมูล-telemetry-csv-logging)
-   - [4.4 การพล็อตแผนที่และ Dashboard (Visualization)](#44-การพล็อตแผนที่และ-dashboard-visualization)
-5. [การเตรียม Virtual Environment และติดตั้ง Requirements (Setup & Install)](#-การเตรียม-virtual-environment-และติดตั้ง-requirements-setup--install)
-   - [ขั้นตอนที่ 1: สร้าง venv ด้วย Python 3.8](#ขั้นตอนที่-1-สร้าง-virtual-environment-ด้วย-python-38)
-   - [ขั้นตอนที่ 2: เปิดใช้งาน venv และติดตั้งไลบรารีจาก requirements.txt](#ขั้นตอนที่-2-เปิดใช้งาน-activate-และติดตั้งจาก-requirementstxt)
-   - [ขั้นตอนที่ 3: ตรวจสอบความถูกต้องของสภาพแวดล้อม](#ขั้นตอนที่-3-ตรวจสอบความถูกต้องของสภาพแวดล้อม)
-6. [วิธีรันโปรแกรม (Execution Guide)](#-วิธีรันโปรแกรม-execution-guide)
-   - [6.1 การรัน BFS (ค่าเริ่มต้น)](#61-การรัน-bfs-breadth-first-search)
-   - [6.2 การรัน A* (A-Star Search)](#62-การรัน-a-a-star-search)
-   - [6.3 การรัน DFS (Depth-First Search)](#63-การรัน-dfs-depth-first-search)
-   - [6.4 การรัน Dijkstra's Algorithm](#64-การรัน-dijkstras-algorithm)
-   - [6.5 การสร้างรูปภาพแผนที่และ Dashboard จาก CSV](#65-การสร้างรูปภาพแผนที่และ-dashboard-จาก-csv)
-   - [6.6 การรันชุดทดสอบ (Unit Tests)](#66-การรันชุดทดสอบ-unit-tests)
-7. [ตารางสรุปพารามิเตอร์คำสั่ง (CLI Arguments Reference)](#-ตารางสรุปพารามิเตอร์คำสั่ง-cli-arguments-reference)
-
----
+## สมาชิกกลุ่ม
+1. 6810110066 นาย ซัซวาลย์ บินสะอิ
+2. 6810110055 นาย ชัชนันท์ บุญส่ง
+3. 6810110324 นาย วิญญู สิงห์สาธร
+4. 6810110448 นาย จิระธาดา พัดบุรี
 
 ## 📋 ข้อกำหนดของระบบ (Requirements)
 
-อ้างอิงตาม [docs/RQM.md](file:///C:/Users/LENOVO_CT/Downloads/New%20folder%20%282%29/docs/RQM.md):
 1. **สนามขนาด $4 \times 4$ ช่อง**:
    - แต่ละช่องมีขนาด $60\text{ cm} \times 60\text{ cm}$ ($0.60\text{ m} \times 0.60\text{ m}$)
    - พิกัดเริ่มต้น (Start): `(1, 4)`
@@ -43,7 +17,6 @@
    - **IMU Sensor (Attitude)**: ติดตามมุมหัน Yaw ($\pm 180^\circ$) เพื่อยืนยันการเลี้ยว $90^\circ$ และตรวจจับการเบี่ยงเบน (Drift)
    - **Gimbal Lock**: ล็อก Gimbal ให้อยู่กึ่งกลางตรงแนวตัวรถ (Pitch = $0^\circ$, Yaw = $0^\circ$, โหมด `CHASSIS_LEAD`) เพื่อให้ ToF ส่องตรงไปข้างหน้าตลอดเวลา
 4. **การบันทึกข้อมูล (CSV Logging)**: บันทึกข้อมูล Telemetry และสถานะเซนเซอร์ในแต่ละก้าวลงไฟล์ CSV **เฉพาะเมื่อรันกับหุ่นจริงเท่านั้น** (โหมดจำลองจะไม่บันทึก เว้นแต่จะระบุ `--log-sim`)
-5. **สภาพแวดล้อม Python**: **ต้องใช้ Python 3.8 เท่านั้น** (โดยในโฟลเดอร์ `.venv` ใช้เวอร์ชัน 3.8.10 เพื่อความเข้ากันได้กับ RoboMaster SDK)
 
 ---
 
@@ -157,218 +130,31 @@
 
 ---
 
-### 4.4 การพล็อตแผนที่และ Dashboard (`src/plot_path.py`)
-- **Single Run Dashboard**: แสดงตารางสนาม $4 \times 4$, จุด Start/Goal/Obstacle, แท็กเซนเซอร์ ToF/Yaw ในแต่ละก้าว, ตาราง Telemetry สรุปผล และกราฟแนวโน้ม ToF / IMU Drift
-- **Multi-Round Comparison Dashboard**: เมื่อรันหุ่นยนต์สะสมตั้งแต่ 2 รอบขึ้นไป ระบบจะสร้างแดชบอร์ดเปรียบเทียบผลลัพธ์ระหว่างรอบ (เปรียบเทียบระยะ ToF, การเลี้ยวของ IMU และความเสถียรของแต่ละรอบ)
-
----
-
-## 🛠️ การเตรียม Virtual Environment และติดตั้ง Requirements (Setup & Install)
-
-> [!IMPORTANT]
-> **ระบบนี้ต้องใช้งานบน Python 3.8 เท่านั้น**
-> ตัวไลบรารี **RoboMaster SDK** มีการคอมไพล์ C-Extensions และระบบจัดการสตรีมเสียง/วิดีโอ (libopus / PyAudio) ที่รองรับได้อย่างเสถียรบน **Python 3.8 (เช่น 3.8.10)** เท่านั้น หากใช้ Python 3.9 หรือใหม่กว่าจะไม่สามารถติดตั้งหรือเชื่อมต่อหุ่นยนต์ได้
-
-โปรดทำตามขั้นตอนตามลำดับดังต่อไปนี้:
-
-### ขั้นตอนที่ 1: สร้าง Virtual Environment ด้วย Python 3.8
-เปิด PowerShell หรือ Command Prompt ในโฟลเดอร์โปรเจกต์ แล้วสร้าง `.venv` โดยชี้ไปยัง Python 3.8:
-```powershell
-# สำหรับ Windows (ใช้ Python Launcher ระบุเวอร์ชัน 3.8)
-py -3.8 -m venv .venv
-```
-*(หากติดตั้ง Python 3.8 ไว้ที่พาธเฉพาะ สามารถระบุเต็มได้ เช่น `C:\Python38\python.exe -m venv .venv`)*
-
----
-
-### ขั้นตอนที่ 2: เปิดใช้งาน (Activate) และติดตั้งจาก `requirements.txt`
-ทำการเปิดใช้งาน Virtual Environment จากนั้นอัปเกรด pip และติดตั้งไลบรารีทั้งหมดผ่าน `requirements.txt`:
-
-```powershell
-# 1. เปิดใช้งาน Virtual Environment บน PowerShell
-.\.venv\Scripts\Activate.ps1
-
-# (หากใช้ Command Prompt ให้ใช้: .venv\Scripts\activate.bat)
-
-# 2. อัปเกรดเครื่องมือ pip
-python -m pip install --upgrade pip
-
-# 3. ติดตั้งไลบรารีที่จำเป็นทั้งหมดจาก requirements.txt
-pip install -r requirements.txt
-```
-
-> [!NOTE]
-> ภายใน [`requirements.txt`](file:///C:/Users/LENOVO_CT/Downloads/New%20folder%20%282%29/requirements.txt) ได้รวบรวมไลบรารีสำคัญไว้ครบถ้วน ได้แก่:
-> - `numpy` & `matplotlib`: คำนวณกริดและสร้างกราฟ Dashboard
-> - `robomaster`: SDK สำหรับควบคุมหุ่นยนต์ EP, แชสซี, กิมบอล, ToF และ IMU
-> - `opencv-python`, `netaddr`, `netifaces`: การเชื่อมต่อเครือข่ายและประมวลผลเซนเซอร์
-
----
-
-### ขั้นตอนที่ 3: ตรวจสอบความถูกต้องของสภาพแวดล้อม
-ตรวจสอบว่า Python ที่เรียกใช้งานเป็นเวอร์ชัน 3.8 ใน `.venv`:
-```powershell
-python --version
-# หรือเรียกตรงโดยไม่ต้อง activate:
-.\.venv\Scripts\python.exe --version
-```
-> ผลลัพธ์ควรแสดงเป็น: `Python 3.8.x` (เช่น `Python 3.8.10`)
-
----
-
 ## 🚀 วิธีรันโปรแกรม (Execution Guide)
 
-> [!TIP]
-> เมื่อทำการเปิดใช้งาน Virtual Environment (`Activate.ps1`) เรียบร้อยแล้ว สามารถใช้คำสั่งย่อเป็น `python <script>.py` แทน `.\.venv\Scripts\python.exe <script>.py` ได้ทันที
 
-### 6.1 การรัน BFS (Breadth-First Search)
+### 1) ตั้งค่า Python environment
 
-#### ก. โหมดจำลอง (Simulation Mode - ไม่ต้องต่อหุ่นจริง, ไม่สร้าง CSV):
+เปิด PowerShell หรือ Command Prompt ในโฟลเดอร์โปรเจคแล้วทำตามขั้นตอนนี้
+
 ```powershell
-.\.venv\Scripts\python.exe main.py --sim
-```
-> ระบบจะคำนวณเส้นทาง BFS แสดงแผนที่ ASCII ในเทอร์มินัล และบันทึกภาพแผนที่ไปที่ `output/path_map.png`
-
-#### ข. รันบนหุ่นยนต์จริงผ่าน Direct Wi-Fi (AP Mode):
-1. เปิดเครื่อง RoboMaster EP และสับสวิตช์การเชื่อมต่อที่ตัวหุ่นไปที่โหมด **Direct (AP)**
-2. ใช้คอมพิวเตอร์เชื่อมต่อกับสัญญาณ Wi-Fi ของหุ่น (เช่น `RM_EP_...`)
-3. รันคำสั่ง:
-```powershell
-.\.venv\Scripts\python.exe main.py --conn ap
-```
-> ข้อมูลเซนเซอร์จริงจะถูกบันทึกสะสมลงใน `logs/navigation_log.csv` และสร้างแผนที่จริงที่ `output/path_map_from_csv.png`
-
-#### ค. รันบนหุ่นยนต์จริงผ่าน Wi-Fi Router (STA Mode):
-1. สับสวิตช์ที่หุ่นไปที่โหมด **Router (STA)** และสแกน QR Code เพื่อให้หุ่นเกาะ Wi-Fi เดียวกับคอมพิวเตอร์
-2. รันคำสั่ง:
-```powershell
-.\.venv\Scripts\python.exe main.py --conn sta
+py -3.8 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-#### ง. รันสะสมหลายรอบ (Multi-Round):
-รันคำสั่งเดิมซ้ำในรอบถัดไป ระบบจะตรวจจับและระบุรอบที่ 2, 3 ให้อัตโนมัติ:
+หากใช้ Git Bash หรือ bash อื่น อาจใช้คำสั่ง:
+
+```bash
+python3.8 -m venv .venv
+source .venv/bin/activate
+```
+### 2) ติดตั้ง dependency
+
 ```powershell
-.\.venv\Scripts\python.exe main.py --conn ap
+cd .\shortest_planing_RDJ\
 ```
 
----
-
-### 6.2 การรัน A* (A-Star Search)
-
-#### ก. โหมดจำลอง (Simulation Mode):
 ```powershell
-.\.venv\Scripts\python.exe main_astar.py --sim
+pip install -r requirements.txt
 ```
-หรือใช้ผ่าน `main.py`:
-```powershell
-.\.venv\Scripts\python.exe main.py --algo astar --sim
-```
-
-#### ข. รันบนหุ่นยนต์จริง:
-```powershell
-# ผ่าน Direct Wi-Fi
-.\.venv\Scripts\python.exe main_astar.py --conn ap
-
-# ผ่าน Router
-.\.venv\Scripts\python.exe main_astar.py --conn sta
-```
-> ข้อมูลจะถูกบันทึกแยกใน `logs/navigation_log_astar.csv` และสร้างภาพที่ `output/path_map_astar_from_csv.png`
-
----
-
-### 6.3 การรัน DFS (Depth-First Search)
-
-รันเพื่อทดสอบการคำนวณและดูสถิติเวลาประมวลผล (Computation Time):
-```powershell
-.\.venv\Scripts\python.exe main_dfs.py
-```
-> แสดงลำดับการค้นหา, ตารางโหนดที่สำรวจ, ค่า Cost รวม และบันทึกแผนที่ไปที่ `output/dfs_path.png`
-
----
-
-### 6.4 การรัน Dijkstra's Algorithm
-
-รันเพื่อตรวจสอบเส้นทางต้นทุนต่ำสุด (Optimal Cost Path):
-```powershell
-.\.venv\Scripts\python.exe main_dijkstra.py
-```
-> แสดงตารางค่าใช้จ่ายสะสมของแต่ละโหนดและบันทึกรูปภาพไปที่ `output/dijkstra_path.png`
-
----
-
-### 6.5 การสร้างรูปภาพแผนที่และ Dashboard จาก CSV
-
-คุณสามารถสั่งให้ `plot_path.py` อ่านข้อมูลเซนเซอร์จากไฟล์ CSV มาวาดกราฟใหม่ได้ตลอดเวลา:
-
-#### ก. สร้างแผนที่รอบล่าสุดจากไฟล์ CSV:
-```powershell
-.\.venv\Scripts\python.exe plot_path.py --csv logs/navigation_log.csv
-```
-
-#### ข. สร้างแผนที่เจาะจงเฉพาะรอบ (เช่น รอบที่ 1):
-```powershell
-.\.venv\Scripts\python.exe plot_path.py --csv logs/navigation_log.csv --run 1 --output output/path_map_run1.png
-```
-
-#### ค. สร้าง Dashboard เปรียบเทียบผลทุกรอบ (Multi-Round Comparison):
-```powershell
-.\.venv\Scripts\python.exe plot_path.py --csv logs/navigation_log.csv --compare --output output/path_map_multi_round_comparison.png
-```
-
-#### ง. สร้าง Dashboard เปรียบเทียบของอัลกอริทึม A*:
-```powershell
-.\.venv\Scripts\python.exe plot_path.py --csv logs/navigation_log_astar.csv --compare --output output/path_map_astar_multi_round_comparison.png
-```
-
----
-
-### 6.6 การรันชุดทดสอบ (Unit Tests)
-
-ทดสอบความถูกต้องของตรรกะการเดิน, ขนาดกริด, สิ่งกีดขวาง, การคำนวณ Cost และระบบ Logging:
-```powershell
-.\.venv\Scripts\python.exe -m unittest test_bfs.py
-```
-
----
-
-## 📊 ตัวอย่างข้อมูลในไฟล์ Telemetry CSV
-
-ตัวอย่างข้อมูลที่บันทึกจากเซนเซอร์ของหุ่นยนต์จริงในแต่ละสเต็ป (`logs/navigation_log.csv`):
-
-| run | step | pos_x | pos_y | action | target_heading | imu_yaw | imu_drift | tof_distance_mm | cell_cost | cumulative_cost | distance_m | status |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | 0 | 1 | 4 | START | 0.0 | -7.40 | 0.00 | 1568.0 | 2 | 0 | 0.00 | SUCCESS |
-| 1 | 1 | 1 | 3 | MOVE_TO_CELL | -90.0 | 81.30 | 0.80 | 1964.0 | 2 | 2 | 0.60 | SUCCESS |
-| 1 | 2 | 1 | 2 | MOVE_TO_CELL | -90.0 | 81.20 | 0.70 | 1457.0 | 3 | 5 | 1.20 | SUCCESS |
-| 1 | 3 | 2 | 2 | MOVE_TO_CELL | 0.0 | -8.30 | -0.90 | 889.0 | 1 | 6 | 1.80 | SUCCESS |
-| 1 | 4 | 2 | 1 | MOVE_TO_CELL | -90.0 | 80.50 | 0.00 | 842.0 | 3 | 9 | 2.40 | SUCCESS |
-| 1 | 5 | 3 | 1 | MOVE_TO_CELL | 0.0 | -8.90 | -1.50 | 1301.0 | 2 | 11 | 3.00 | SUCCESS |
-| 1 | 6 | 4 | 1 | REACH_GOAL | 0.0 | -9.00 | -1.60 | 719.0 | 1 | 12 | 3.60 | GOAL_REACHED |
-
----
-
-## 📑 ตารางสรุปพารามิเตอร์คำสั่ง (CLI Arguments Reference)
-
-### พารามิเตอร์ของ `main.py` / `main_astar.py`:
-
-| อาร์กิวเมนต์ | ชนิด | ค่าเริ่มต้น | คำอธิบาย |
-|:---|:---:|:---:|:---|
-| `--sim` | Flag | `False` | รันในโหมดจำลอง ไม่ต้องเชื่อมต่อหุ่นยนต์จริง และไม่บันทึก CSV |
-| `--conn` | String | `ap` | รูปแบบการเชื่อมต่อหุ่นจริง: `ap` (ต่อ Wi-Fi ตรง) หรือ `sta` (ผ่าน Router) |
-| `--algo` | String | `bfs` | เลือกอัลกอริทึมสำหรับ `main.py`: `bfs` หรือ `astar` |
-| `--csv` | String | Auto | กำหนดพาธไฟล์ CSV สำหรับบันทึกข้อมูล Telemetry เอง |
-| `--clear-csv` | Flag | `False` | ล้างข้อมูลเดิมในไฟล์ CSV และเริ่มนับรอบที่ 1 ใหม่ |
-| `--run` | Int | Auto | ระบุหมายเลขรอบ (Run ID) เอง หากไม่ระบุจะนับต่อจากรอบเดิมในไฟล์ |
-| `--log-sim` | Flag | `False` | บังคับบันทึกข้อมูลลงไฟล์ CSV แม้รันอยู่ในโหมดจำลอง (`--sim`) |
-| `--all-paths` | Flag | `False` | ค้นหาและแสดงผลเส้นทาง BFS ที่เป็นไปได้ทั้งหมด |
-
-### พารามิเตอร์ของ `plot_path.py`:
-
-| อาร์กิวเมนต์ | ชนิด | ค่าเริ่มต้น | คำอธิบาย |
-|:---|:---:|:---:|:---|
-| `--csv` | String | Auto | ระบุพาธไฟล์ CSV ที่ต้องการนำมาพล็อต |
-| `--output` | String | Auto | ระบุพาธและชื่อไฟล์รูปภาพปลายทาง (.png) |
-| `--run` | Int | ล่าสุด | ระบุรอบที่ต้องการพล็อตเฉพาะเจาะจง |
-| `--compare` | Flag | `False` | สร้างภาพ Dashboard เปรียบเทียบผลลัพธ์ทุกรอบ |
-| `--bfs` | Flag | `False` | บังคับพล็อตเฉพาะแผนที่ทางทฤษฎี BFS โดยไม่อ่านไฟล์ CSV |
-| `--show` | Flag | `False` | เปิดหน้าต่างแสดงรูปภาพบนหน้าจอทันทีเมื่อสร้างเสร็จ |
+### 3) การรันสามารถกดรันที่ไฟล์ชื่อขึ้นต้นด้วย main ได้เลยแต่ต้องต่อหุ่นก่อน (main.py คือ bfs)
